@@ -1,0 +1,77 @@
+class MainClass
+{
+  //Controls the mode that governs selection/iterator start location
+  ItemIteratorClass::IterateModes IterMode;
+  //Stores extra options for Iterator class
+  uint IterOptions;
+  //Resolves case items
+  ItemCacheClass ItemCache;
+  //For actualfiles
+  String ExportPath;
+  //For text representation of files
+  String TextPath;
+  //for processing time
+  SystemClass thread;
+
+  void Main(CaseClass c)
+  {
+    //clear previous console and show new
+    SystemClass::ClearConsole(SystemClass::SHOWCONSOLE);
+
+    //Print time for script start
+    Console.WriteLine("Initial Time (ms from Operating System startup) ");
+    Console.WriteLine(thread.GetTickCount());
+
+    if (c)
+    {
+      Console.WriteLine("Building File System... Please Wait \n");
+
+      //build an iterator starting at selected location in evidence
+      IterMode = ItemIteratorClass::CURRENTFOLDER;
+      //Sets the options for the iterator.
+      IterOptions = ItemIteratorClass::NORECURSE|ItemIteratorClass::NOPROXY;
+      //Format is case/options/mode
+      ItemIteratorClass iter(c, IterOptions, IterMode);
+
+      //Build the path for storing output on local file system
+      TextPath.BuildPath(c.ExportFolder(), "TextTerry2");
+
+      //Build the folders for the local file system paths
+      LocalMachine.CreateFolder(TextPath, NOTIFYSHELL|CREATEFOLDERALL);
+
+      //cache for storing current item information
+      ItemCache = new ItemCacheClass(c);
+
+      //sets up a new file creation
+      LocalFileClass outputText();
+
+      //the work of the model
+      //operates on everything below the selected location in the file system
+      while (EntryClass entry = iter.GetNextEntry())
+        {
+        //get each entry's name, path and folder/file type
+        String filepath, textpath, filename = entry.Name();
+        String itemLocation = entry.ItemPath();
+        String description = entry.Description();
+        String entryInfo = itemLocation + "\r\n" + description;
+        filename += "_" + entry.GUID();
+
+
+        //in the TextPath location, build the file (name and extension)
+        textpath.BuildPath(TextPath, filename, ".txt");
+
+        //with the newly built file, write the entry information into it
+        outputText.Open(textpath, FileClass::WRITE);
+        outputText.Write(entryInfo);
+        outputText.Close();
+        }//end while
+        Console.WriteLine("Finished! \n");
+
+        //print time for script end
+        Console.WriteLine("Final Time ");
+        //total script time is difference between final and start times
+        Console.WriteLine(thread.GetTickCount());
+
+    }//end if
+  }//end Main
+}//end Class
